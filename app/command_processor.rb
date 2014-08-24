@@ -13,7 +13,6 @@ class Commands
         end
 
         #TODO: check if starting order is non-empty, valid content
-        #TODO: handle startdate and make sure it is in the future
         starting_order = File.open(opts[:orderfile]).readlines.each { |line| line.strip! }
         usernames = starting_order.uniq 
         users = User.add_missing(usernames)
@@ -29,14 +28,13 @@ class Commands
 
     def self.make_schedule(opts)
 
+        date = nil
         if not opts[:startdate].nil?
             date = Date.clean_parse(opts[:startdate])
             if date.nil?
                 puts "Invalid date format"
                 return
             end
-        else
-            date = ScheduledTillDate.schedule_till.next
         end
         
         Schedule.extend(from: date)
@@ -45,12 +43,10 @@ class Commands
     end
         
     def self.list_schedule(opts)
+        user = nil
         if not opts[:username].nil?
             user = User.where(name: opts[:username])
-        else
-            user = nil
         end
-
 
         puts "Schedule for the next 30 days:"
         puts "Date\tUser"
@@ -60,9 +56,6 @@ class Commands
     end
 
     def self.show_support_hero
-        if ScheduledTillDate.extend?(Date.today)
-            Schedule.extend(from: Date.today)
-        end
 
         hero = Schedule.support_hero
         if hero.nil?
@@ -93,10 +86,6 @@ class Commands
             return
         end
 
-        if ScheduledTillDate.extend?(date.end_of_month)
-            Schedule.extend(to: date.end_of_month)
-        end
-
         user = User.where(name: opts[:username]).first
         message = Schedule.off_day(user, date)
         if not message.nil?
@@ -125,10 +114,6 @@ class Commands
         end
         if swapper_date <= Date.today or swappee_date <= Date.today
             puts "Must pick a date in the future."
-        end
-
-        if ScheduledTillDate.extend?([swapper_date, swappee_date].max)
-            Schedule.exend([swapper_date, swappee_date].max)
         end
 
         swapper = User.where(name: opts[:swapper]).first

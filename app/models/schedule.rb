@@ -64,6 +64,10 @@ class Schedule < ActiveRecord::Base
     #stored so it also possible that if enough swappings happen, someone might
     #get swapped into a day they intially marked a not doable (TODO).
     def self.off_day(user, date)
+        if ScheduledTillDate.extend?(date.end_of_month)
+            Schedule.extend(to: date.end_of_month)
+        end
+
         user_schedule = where(user: user, date: date).first
         if user_schedule.nil?
             return "No schedule for user on that date"
@@ -86,6 +90,10 @@ class Schedule < ActiveRecord::Base
 
     #Find who is today's on-duty user
     def self.support_hero
+        if ScheduledTillDate.extend?(Date.today)
+            Schedule.extend(from: Date.today)
+        end
+
         return Schedule.where(date: Date.today).first 
     end
 
@@ -94,6 +102,11 @@ class Schedule < ActiveRecord::Base
     # Swapper - Person initiating the swap
     # Swappee - Person with whom the schedule is being swapped
     def swap(swapper, swapper_date, swappee, swappee_date)
+
+        if ScheduledTillDate.extend?([swapper_date, swappee_date].max)
+            Schedule.exend([swapper_date, swappee_date].max)
+        end
+
         swapper_schedule = where(user: swapper, date: swapper_date).first
         swappee_schedule = where(user: swappee, date:swappee_date).first
         
@@ -108,5 +121,4 @@ class Schedule < ActiveRecord::Base
         swappee_schedule.save
         return nil
     end
-
 end

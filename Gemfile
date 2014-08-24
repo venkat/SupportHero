@@ -29,6 +29,9 @@ gem 'spring',        group: :development
 #Command line processing
 gem 'slop'
 
+#Handling holidays
+gem 'holidays'
+
 # Use ActiveModel has_secure_password
 # gem 'bcrypt', '~> 3.1.7'
 
