@@ -1,27 +1,17 @@
 require './app/user'
 require './app/models/schedule'
+require './app/date_utils'
 require 'date'
-
-#Skip weekends to only get weekdays
-def closest_weekday(date)
-    if date.wday == 6 #Handle Saturday
-        return date.next.next
-    end
-    if date.wday == 0 #Handle Sunday
-        return date.next
-    end
-    return date
-end
     
-#Assign users to the schedule by starting order but for only weekdays
+#Assign users to the schedule by starting order but for only schedulable days
 def generate_schedule(starting_order, start_date)
-    cur_date = closest_weekday(start_date) 
+    cur_date = start_date.next_schedule_day
     users = get_users(starting_order.uniq)
     starting_order.each do |username|
         day_schedule = Schedule.find_or_initialize_by(date: cur_date) 
         day_schedule.user = users[username]
         day_schedule.save
-        cur_date = closest_weekday(cur_date.next)
+        cur_date = cur_date.next.next_schedule_day
     end
 end
 
