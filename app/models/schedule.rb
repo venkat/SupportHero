@@ -22,8 +22,12 @@ class Schedule < ActiveRecord::Base
     end
 
     def self.extend(from: nil, to: nil)
+        if OrderEntry.starting_order.nil?
+            return
+        end
+
         if from.nil?
-            from = ScheduledTillDate.schedule_till
+            from = ScheduledTillDate.schedule_till.next
         end
  
         loop do
@@ -35,8 +39,74 @@ class Schedule < ActiveRecord::Base
             else
                 scheduled_till_date.update(date: schedule_till)
             end
+            break if to.nil? or schedule_till.nil? or schedule_till >= to
             from = schedule_till.next
-            break if to.nil? or schedule_till >= to
         end
     end
+
+    def self.list(user=nil)
+        if ScheduledTillDate.extend?(Date.today.end_of_month)
+            Schedule.extend(to: Date.today.end_of_month)
+        end
+
+        if user.nil?
+            schedule_days = Schedule.where("date >= ? and date <= ?", Date.today.beginning_of_month, Date.today.end_of_month)
+        else
+            schedule_days = Schedule.where(user: user).where("date >= ?", Date.today).limit(30)
+        end
+
+        return schedule_days.limit(30)
+    end
+
+    #Handle user making their day as not doable. Currently swaps with
+    #another random user. Swapping with the next schedule date might be a better
+    #approach. TODO and open for discussion. Also, the marked days are not
+    #stored so it also possible that if enough swappings happen, someone might
+    #get swapped into a day they intially marked a not doable (TODO).
+    def self.off_day(user, date)
+        user_schedule = where(user: user, date: date).first
+        if user_schedule.nil?
+            return "No schedule for user on that date"
+        end
+
+        swappable_schedules = where.not(user: user)
+        if swappable_schedules.nil?
+            return "No other days available to swap with"
+        end
+
+        offset = rand(swappable_schedules.count)
+        swappable_schedule = swappable_schedules[offset]
+        user_schedule.user = swappable_schedule.user
+        user_schedule.save
+        swappable_schedule.user = user
+        swappable_schedule.save
+
+        return nil
+    end
+
+    #Find who is today's on-duty user
+    def self.support_hero
+        return Schedule.where(date: Date.today).first 
+    end
+
+    #Swap schedules
+    #Params:
+    # Swapper - Person initiating the swap
+    # Swappee - Person with whom the schedule is being swapped
+    def swap(swapper, swapper_date, swappee, swappee_date)
+        swapper_schedule = where(user: swapper, date: swapper_date).first
+        swappee_schedule = where(user: swappee, date:swappee_date).first
+        
+        if swapper_schedule.nil? or swappee_schedule.nil?
+            return "Invalid User or Date given"
+        end
+        
+        tmp_user = swapper_schedule.user
+        swapper_schedule.user = swappee_schedule.user
+        swappee_schedule.user = tmp_user
+        swapper_schedule.save
+        swappee_schedule.save
+        return nil
+    end
+
 end

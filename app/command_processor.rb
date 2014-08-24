@@ -1,6 +1,7 @@
-require './app/schedule'
 require './app/models/order_entry'
 require './app/models/scheduled_till_date'
+require './app/models/user'
+require './app/models/schedule'
 require './app/date_utils'
 
 #Methods that process the different commands supported by the client
@@ -15,34 +16,29 @@ class Commands
         #TODO: handle startdate and make sure it is in the future
         starting_order = File.open(opts[:orderfile]).readlines.each { |line| line.strip! }
         usernames = starting_order.uniq 
-        users = add_missing_users(usernames)
-        refresh_starting_order(starting_order, users)
+        users = User.add_missing(usernames)
+        OrderEntry.refresh(starting_order, users)
         puts "Starting Order processed and Schedule update starting from today."
     end
 
     def self.list_order
         puts "Given starting order:"
         puts "Order\tUser"
-        OrderEntry.all.order(:order).each{|order| puts "#{order.order}\t#{order.user.name}"}
+        OrderEntry.starting_order.each{|order| puts "#{order.order}\t#{order.user.name}"}
     end
 
     def self.make_schedule(opts)
 
         if not opts[:startdate].nil?
-            date = get_date(opts[:startdate])
-            if date.nil? or d
+            date = Date.clean_parse(opts[:startdate])
+            if date.nil?
                 puts "Invalid date format"
                 return
             end
         else
-            date = ScheduledTillDate.schedule_till
+            date = ScheduledTillDate.schedule_till.next
         end
         
-        if date <= Date.today
-            puts "startdate should be later than today."
-            return
-        end
-
         Schedule.extend(from: date)
 
         puts "Schedule created successfully"
@@ -55,13 +51,10 @@ class Commands
             user = nil
         end
 
-        if ScheduledTillDate.extend?(Date.today.end_of_month)
-            Schedule.extend(to: Date.today.end_of_month)
-        end
 
         puts "Schedule for the next 30 days:"
         puts "Date\tUser"
-        schedule_list(user).each do |schedule|
+        Schedule.list(user).each do |schedule|
             puts "#{schedule.date}\t#{schedule.user.name}"
         end
     end
@@ -71,7 +64,7 @@ class Commands
             Schedule.extend(from: Date.today)
         end
 
-        hero = support_hero
+        hero = Schedule.support_hero
         if hero.nil?
             puts "No one is on-duty today"
         else
@@ -89,7 +82,7 @@ class Commands
             return
         end
 
-        date = get_date(opts[:offdate])
+        date = Date.clean_parse(opts[:offdate])
         if date.nil?
             puts "Invalid date format."
             return
@@ -105,7 +98,7 @@ class Commands
         end
 
         user = User.where(name: opts[:username]).first
-        message = off_day(user, date)
+        message = Schedule.off_day(user, date)
         if not message.nil?
             puts "#{message}"
         else
@@ -125,8 +118,8 @@ class Commands
             return
         end
 
-        swapper_date = get_date(opts[:swapper_date])
-        swappee_date = get_date(opts[:swappee_date])
+        swapper_date = Date.clean_parse(opts[:swapper_date])
+        swappee_date = Date.clean_parse(opts[:swappee_date])
         if swapper_date.nil? or swappee_date.nil?
             puts "Both Swapper and Swappee dates must be in valid format."
         end
@@ -140,7 +133,7 @@ class Commands
 
         swapper = User.where(name: opts[:swapper]).first
         swappee = User.where(name: opts[:swappee]).first
-        message = swap_schedules(swapper, swapper_date, swappee, swappee_date)  
+        message = Schedule.swap(swapper, swapper_date, swappee, swappee_date)  
         if not message.nil?
             puts "#{message}"
         else

@@ -3,10 +3,6 @@
 require 'active_record'
 require 'sqlite3'
 require 'slop'
-require './app/models/user'
-require './app/models/order_entry'
-require './app/user'
-require './app/order'
 require './app/command_processor'
 require 'date'
 
