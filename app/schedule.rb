@@ -4,16 +4,6 @@ require './app/date_utils'
 require 'date'
     
 #Assign users to the schedule by starting order but for only schedulable days
-def generate_schedule(starting_order, start_date)
-    cur_date = start_date.next_schedule_day
-    users = get_users(starting_order.uniq)
-    starting_order.each do |username|
-        day_schedule = Schedule.find_or_initialize_by(date: cur_date) 
-        day_schedule.user = users[username]
-        day_schedule.save
-        cur_date = cur_date.next.next_schedule_day
-    end
-end
 
 def schedule_list(user = nil)
     if user.nil?

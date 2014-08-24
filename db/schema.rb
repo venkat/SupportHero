@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140822091750) do
+ActiveRecord::Schema.define(version: 20140824051442) do
 
   create_table "holidays", force: true do |t|
     t.date     "data"
@@ -39,6 +39,14 @@ ActiveRecord::Schema.define(version: 20140822091750) do
   end
 
   add_index "order_entries", ["user_id"], name: "index_order_entries_on_user_id"
+
+  create_table "scheduled_till_dates", force: true do |t|
+    t.date     "date"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "scheduled_till_dates", ["date"], name: "index_scheduled_till_dates_on_date", unique: true
 
   create_table "schedules", force: true do |t|
     t.date     "date"
