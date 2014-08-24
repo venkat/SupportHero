@@ -3,3 +3,9 @@ B
 A
 A
 C
+C
+B
+C
+A
+A
+A
