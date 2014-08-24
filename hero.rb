@@ -39,7 +39,7 @@ def parse_opts
         end
 
         command 'make-schedule' do
-            description 'Generates the Scheduled based on the stored starting order'
+            description 'Generates the schedule based on the stored starting order'
             on :startdate=, 'When to start the schedule from. Defaults to starting from end of current schedule. Overwrites existing assignments'
 
             run do |opts, args|
