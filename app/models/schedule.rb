@@ -1,3 +1,6 @@
+require './app/models/scheduled_till_date'
+require './app/date_utils'
+
 class Schedule < ActiveRecord::Base
   belongs_to :user
 
@@ -16,5 +19,24 @@ class Schedule < ActiveRecord::Base
 
     def self.strip(schedule_till)
         where("date > ?", schedule_till).destroy_all
+    end
+
+    def self.extend(from: nil, to: nil)
+        if from.nil?
+            from = ScheduledTillDate.schedule_till
+        end
+ 
+        loop do
+            schedule_till = Schedule.generate(OrderEntry.starting_order, from)
+            Schedule.strip(schedule_till)
+            scheduled_till_date = ScheduledTillDate.first
+            if scheduled_till_date.nil?
+                ScheduledTillDate.create(date: schedule_till)
+            else
+                scheduled_till_date.update(date: schedule_till)
+            end
+            from = schedule_till.next
+            break if to.nil? or schedule_till >= to
+        end
     end
 end

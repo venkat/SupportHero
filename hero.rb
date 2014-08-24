@@ -93,7 +93,7 @@ end
 
 if __FILE__ == $0
     if ARGV.empty?
-        print parse_opts
+        puts parse_opts
     else
         opts = parse_opts
     end
