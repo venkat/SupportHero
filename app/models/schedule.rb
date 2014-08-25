@@ -55,7 +55,7 @@ class Schedule < ActiveRecord::Base
             schedule_days = Schedule.where(user: user).where("date >= ?", Date.today).limit(30)
         end
 
-        return schedule_days.limit(30)
+        return schedule_days.order(date: :asc).limit(30)
     end
 
     #Handle user making their day as not doable. Currently swaps with
