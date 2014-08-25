@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
 require 'slop'
-require './app/command_processor'
+require './command_processor'
 require 'date'
 require 'json'
 

@@ -47,13 +47,6 @@ class Date
         return date
     end
 
-    def self.clean_parse(date_str)
-        begin
-            return parse(date_str)
-        rescue ArgumentError => e
-            return false
-        end
-    end
 end 
 
 if __FILE__ == $0

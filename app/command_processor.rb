@@ -1,10 +1,17 @@
-require './app/date_utils'
 require 'rest_client'
 
 #Methods that process the different commands supported by the client
 class Commands
     def initialize(api_url)
         @api_url = api_url
+    end
+
+    def self.clean_parse(date_str)
+        begin
+            return Date.parse(date_str)
+        rescue ArgumentError => e
+            return false
+        end
     end
 
     def set_order(opts)
@@ -33,7 +40,7 @@ class Commands
 
         date = nil
         if not opts[:startdate].nil?
-            date = Date.clean_parse(opts[:startdate])
+            date = clean_parse(opts[:startdate])
             if date.nil?
                 puts "Invalid date format"
                 return
@@ -80,7 +87,7 @@ class Commands
             return
         end
 
-        date = Date.clean_parse(opts[:offdate])
+        date = clean_parse(opts[:offdate])
         if date.nil?
             puts "Invalid date format."
             return
@@ -113,8 +120,8 @@ class Commands
             return
         end
 
-        swapper_date = Date.clean_parse(opts[:swapper_date])
-        swappee_date = Date.clean_parse(opts[:swappee_date])
+        swapper_date = clean_parse(opts[:swapper_date])
+        swappee_date = clean_parse(opts[:swappee_date])
         if swapper_date.nil? or swappee_date.nil?
             puts "Both Swapper and Swappee dates must be in valid format."
         end
