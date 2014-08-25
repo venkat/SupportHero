@@ -7,6 +7,7 @@ gem 'rails', '4.1.5'
 # Use postgresql as the database for Active Record
 gem 'pg'
 gem 'rails_12factor', group: :production
+# Use unicorn as the app server
 gem 'unicorn'
 # Use SCSS for stylesheets
 gem 'sass-rails', '~> 4.0.3'
@@ -43,9 +44,6 @@ gem 'json'
 
 # Use ActiveModel has_secure_password
 # gem 'bcrypt', '~> 3.1.7'
-
-# Use unicorn as the app server
-# gem 'unicorn'
 
 # Use Capistrano for deployment
 # gem 'capistrano-rails', group: :development
