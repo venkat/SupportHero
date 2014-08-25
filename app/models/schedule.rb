@@ -75,6 +75,7 @@ class Schedule < ActiveRecord::Base
         end
 
         swappable_schedules = where.not(user: user)
+        swappable_schedules = swappable_schedules.where("date > ?", Date.today)
         if swappable_schedules.nil?
             return "No other days available to swap with"
         end
