@@ -32,6 +32,12 @@ gem 'slop'
 #Handling holidays
 gem 'holidays'
 
+#JSON
+gem 'json'
+
+#REST API client
+gem 'rest-client'
+
 # Use ActiveModel has_secure_password
 # gem 'bcrypt', '~> 3.1.7'
 
@@ -41,6 +47,6 @@ gem 'holidays'
 # Use Capistrano for deployment
 # gem 'capistrano-rails', group: :development
 
-# Use debugger
-# gem 'debugger', group: [:development, :test]
+#Use debugger
+gem 'debugger', group: [:development, :test]
 

@@ -2,6 +2,30 @@ Rails.application.routes.draw do
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".
 
+  resources :schedules do
+    resource :user
+    
+    collection do
+      get 'support_hero'
+      get 'extend'
+      get 'off_day'
+      get 'swap'
+    end
+  end
+
+  resources :users do
+    collection do
+       post 'add_missing'
+    end
+  end
+
+  resources :order_entries do
+    resource :user
+    collection do
+        post 'refresh'
+    end
+  end
+
   # You can have the root of your site routed with "root"
   # root 'welcome#index'
 

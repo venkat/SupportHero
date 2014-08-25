@@ -1,3 +1,4 @@
+#TODO: refactor User schema to have username instead of name column
 class User < ActiveRecord::Base
     #Given usernames, return hash mapping usernames to users
     def self.users(usernames)
@@ -15,6 +16,6 @@ class User < ActiveRecord::Base
         new_usernames.each do |name|
             existing_users[name] = User.create(name: name)
         end
-        return existing_users
+        return existing_users.values
     end
 end

@@ -1,12 +1,13 @@
-require './app/models/order_entry'
-require './app/models/scheduled_till_date'
-require './app/models/user'
-require './app/models/schedule'
 require './app/date_utils'
+require 'rest_client'
 
 #Methods that process the different commands supported by the client
 class Commands
-    def self.set_order(opts)
+    def initialize(api_url)
+        @api_url = api_url
+    end
+
+    def set_order(opts)
         if opts[:orderfile].nil?
             puts "Path to the starting order file needed"
             return
@@ -15,18 +16,20 @@ class Commands
         #TODO: check if starting order is non-empty, valid content
         starting_order = File.open(opts[:orderfile]).readlines.each { |line| line.strip! }
         usernames = starting_order.uniq 
-        users = User.add_missing(usernames)
-        OrderEntry.refresh(starting_order, users)
-        puts "Starting Order processed and Schedule update starting from today."
+        RestClient.post "#{@api_url}/users/add_missing", {usernames: usernames}.to_json, content_type: :json, accept: :json
+        RestClient.post "#{@api_url}/order_entries/refresh", {order_entries: starting_order}.to_json, content_type: :json, accept: :json
+        puts "Starting Order updated."
     end
 
-    def self.list_order
+    def list_order
         puts "Given starting order:"
         puts "Order\tUser"
-        OrderEntry.starting_order.each{|order| puts "#{order.order}\t#{order.user.name}"}
+        response = RestClient.get "#{@api_url}/order_entries", accept: :json
+        starting_order = JSON.parse(response)
+        starting_order.each{|order| puts "#{order["order"]}\t#{order["user"]["name"]}"}
     end
 
-    def self.make_schedule(opts)
+    def make_schedule(opts)
 
         date = nil
         if not opts[:startdate].nil?
@@ -37,35 +40,37 @@ class Commands
             end
         end
         
-        Schedule.extend(from: date)
-
+        params = {from: date}
+        RestClient.get "#{@api_url}/schedules/extend", {params: params}
         puts "Schedule created successfully"
     end
         
-    def self.list_schedule(opts)
-        user = nil
+    def list_schedule(opts)
+        params = nil
         if not opts[:username].nil?
-            user = User.where(name: opts[:username])
+            params = {:username => opts[:username]}
         end
 
+        schedules = RestClient.get "#{@api_url}/schedules" , {:params => params}
         puts "Schedule for the next 30 days:"
         puts "Date\tUser"
-        Schedule.list(user).each do |schedule|
-            puts "#{schedule.date}\t#{schedule.user.name}"
+        JSON.parse(schedules).each do |schedule|
+            puts "#{schedule["date"]}\t#{schedule["user"]["name"]}"
         end
     end
 
-    def self.show_support_hero
+    def show_support_hero
 
-        hero = Schedule.support_hero
-        if hero.nil?
+        hero = RestClient.get "#{@api_url}/schedules/support_hero"
+        if hero.nil? or hero.empty? or hero == 'null'
             puts "No one is on-duty today"
         else
-            puts "#{hero.user.name} is Support Hero of the day!"
+            hero = JSON.parse(hero)
+            puts "#{hero["user"]["name"]} is Support Hero of the day!"
         end
     end
 
-    def self.mark_off_duty(opts)
+    def mark_off_duty(opts)
         if opts[:username].nil?
             puts "Username needed."
             return
@@ -86,17 +91,18 @@ class Commands
             return
         end
 
-        user = User.where(name: opts[:username]).first
-        message = Schedule.off_day(user, date)
+        params = {username: opts[:username], date: date}
+        response = RestClient.get "#{@api_url}/schedules/off_day", params: params
+        message = JSON.parse(response)["message"]
         if not message.nil?
-            puts "#{message}"
+            puts message
         else
             #TODO: List the changes here
             puts "Off day set. Please look at the updated schedule"
         end
     end
 
-    def self.make_date_swap(opts)
+    def make_date_swap(opts)
         if opts[:swapper].nil? or opts[:swappee].nil?
             puts "Username needed for both swapper and swappee."
             return
@@ -116,11 +122,16 @@ class Commands
             puts "Must pick a date in the future."
         end
 
-        swapper = User.where(name: opts[:swapper]).first
-        swappee = User.where(name: opts[:swappee]).first
-        message = Schedule.swap(swapper, swapper_date, swappee, swappee_date)  
+        params = {
+                  swapper: opts[:swapper],
+                  swappee: opts[:swappee],
+                  swapper_date: swapper_date,
+                  swappee_date: swappee_date,
+                 }
+        response = RestClient.get "#{@api_url}/schedules/swap", params: params
+        message = JSON.parse(response)["message"]
         if not message.nil?
-            puts "#{message}"
+            puts message
         else
             puts "Days swapped. Please look at the updated schedule."
         end

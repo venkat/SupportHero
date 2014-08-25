@@ -49,7 +49,7 @@ class Schedule < ActiveRecord::Base
             Schedule.extend(to: Date.today.end_of_month)
         end
 
-        if user.nil?
+        if user.nil? or user.empty?
             schedule_days = Schedule.where("date >= ? and date <= ?", Date.today.beginning_of_month, Date.today.end_of_month)
         else
             schedule_days = Schedule.where(user: user).where("date >= ?", Date.today).limit(30)
@@ -63,7 +63,8 @@ class Schedule < ActiveRecord::Base
     #approach. TODO and open for discussion. Also, the marked days are not
     #stored so it also possible that if enough swappings happen, someone might
     #get swapped into a day they intially marked a not doable (TODO).
-    def self.off_day(user, date)
+    def self.off_day(username, date)
+        user = User.where(name: username).first
         if ScheduledTillDate.extend?(date.end_of_month)
             Schedule.extend(to: date.end_of_month)
         end
@@ -101,7 +102,7 @@ class Schedule < ActiveRecord::Base
     #Params:
     # Swapper - Person initiating the swap
     # Swappee - Person with whom the schedule is being swapped
-    def swap(swapper, swapper_date, swappee, swappee_date)
+    def self.swap(swapper, swapper_date, swappee, swappee_date)
 
         if ScheduledTillDate.extend?([swapper_date, swappee_date].max)
             Schedule.exend([swapper_date, swappee_date].max)

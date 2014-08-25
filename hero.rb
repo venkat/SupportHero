@@ -1,17 +1,11 @@
 #!/usr/bin/env ruby
 
-require 'active_record'
-require 'sqlite3'
 require 'slop'
 require './app/command_processor'
 require 'date'
+require 'json'
 
-dbconfig = YAML.load(File.read('config/database.yml'))
-env = ENV['RACK_ENV'] || 'development'
-ActiveRecord::Base.establish_connection dbconfig[env]
-
-
-def parse_opts
+def parse_opts(commands=nil)
     opts = Slop.parse help: true do
         banner 'Usage: ./hero.rb command [options]'
 
@@ -22,7 +16,7 @@ def parse_opts
             on :orderfile=, 'Path to the file with the starting order listed, one name per line. New names will create a user if a user with that name is not present'
 
             run do |opts, args|
-                Commands.set_order opts.to_hash
+                commands.set_order opts.to_hash
             end
         end
 
@@ -30,7 +24,7 @@ def parse_opts
             description 'List the given starting order'
 
             run do |opts, args|
-                Commands.list_order
+                commands.list_order
             end
         end
 
@@ -39,7 +33,7 @@ def parse_opts
             on :startdate=, 'When to start the schedule from. Defaults to starting from end of current schedule. Overwrites existing assignments'
 
             run do |opts, args|
-                Commands.make_schedule opts.to_hash
+                commands.make_schedule opts.to_hash
             end
         end
 
@@ -49,7 +43,7 @@ def parse_opts
             on :username=, "Username for the user whose scheduled needs to be listed. No username implies all users"
 
             run do |opts, args|
-                Commands.list_schedule opts.to_hash
+                commands.list_schedule opts.to_hash
             end
         end
 
@@ -57,7 +51,7 @@ def parse_opts
             description "Support Hero of the day"
 
             run do |opts, args|
-                Commands.show_support_hero
+                commands.show_support_hero
             end
         end
 
@@ -68,7 +62,7 @@ def parse_opts
             on :offdate=, "Date (example, March 3rd 2014) which is undoable by the user"
 
             run do |opts, args|
-                Commands.mark_off_duty opts.to_hash
+                commands.mark_off_duty opts.to_hash
             end
         end
 
@@ -81,16 +75,21 @@ def parse_opts
             on :swappee_date=, "Date of swappee"
 
             run do |opts, args|
-                Commands.make_date_swap(opts.to_hash)
+                commands.make_date_swap(opts.to_hash)
             end
         end
     end
 end
 
 if __FILE__ == $0
+    api_url = ENV['API_URL']
+    if api_url.nil?
+        print "Please set API_URL environment variable to the server. (Example: http://localhost:3000/)"
+    end
+    commands = Commands.new(api_url)
     if ARGV.empty?
         puts parse_opts
     else
-        opts = parse_opts
+        opts = parse_opts(commands)
     end
 end

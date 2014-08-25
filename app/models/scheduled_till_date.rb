@@ -3,7 +3,6 @@ class ScheduledTillDate < ActiveRecord::Base
         date = ScheduledTillDate.first
         date &&= date.date
         date ||= Date.today
-        date = date.next
         return date
     end
     def self.extend?(date)
