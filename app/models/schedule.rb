@@ -1,5 +1,5 @@
 require './app/models/scheduled_till_date'
-require './app/date_utils'
+require './lib/date_utils'
 
 class Schedule < ActiveRecord::Base
   belongs_to :user

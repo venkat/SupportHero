@@ -1,9 +1,9 @@
 #!/usr/bin/env ruby
 
 require 'slop'
-require './command_processor'
 require 'date'
 require 'json'
+require './command_processor'
 
 def parse_opts(commands=nil)
     opts = Slop.parse help: true do
