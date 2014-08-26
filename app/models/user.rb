@@ -1,14 +1,14 @@
-#TODO: refactor User schema to have username instead of name column
+# TODO: refactor User schema to have username instead of name column
 class User < ActiveRecord::Base
-    #Given usernames, return hash mapping usernames to users
+    # Given usernames, return hash mapping usernames to users
     def self.users(usernames)
         return Hash[User.where(name: usernames).map {|user| [user.name, user]}]
     end
 
-    #Adds missing users by creating them
-    #Params:
-    # - usernames: list of unique usernames, both new and missing
-    #Returns: All user objects corresponding to the given usernames
+    # Adds missing users by creating them
+    # Params:
+    #   usernames: list of unique usernames, both new and missing
+    # Returns: All user objects
     def self.add_missing(usernames)
         existing_users = users(usernames)
         existing_usernames = existing_users.keys

@@ -40,7 +40,7 @@ class Commands
 
         date = nil
         if not opts[:startdate].nil?
-            date = clean_parse(opts[:startdate])
+            date = self.class.clean_parse(opts[:startdate])
             if date.nil?
                 puts "Invalid date format"
                 return
@@ -87,7 +87,7 @@ class Commands
             return
         end
 
-        date = clean_parse(opts[:offdate])
+        date = self.class.clean_parse(opts[:offdate])
         if date.nil?
             puts "Invalid date format."
             return
@@ -120,8 +120,8 @@ class Commands
             return
         end
 
-        swapper_date = clean_parse(opts[:swapper_date])
-        swappee_date = clean_parse(opts[:swappee_date])
+        swapper_date = self.class.clean_parse(opts[:swapper_date])
+        swappee_date = self.class.clean_parse(opts[:swappee_date])
         if swapper_date.nil? or swappee_date.nil?
             puts "Both Swapper and Swappee dates must be in valid format."
         end

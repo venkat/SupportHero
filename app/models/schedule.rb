@@ -1,9 +1,15 @@
 require './app/models/scheduled_till_date'
 require './lib/date_utils'
 
+# Generating and managing the schedule. Note that +list+, +off_day+,
+# +support_hero+ and +swap+ lazily extend the schedule if necessary.
 class Schedule < ActiveRecord::Base
-  belongs_to :user
+    belongs_to :user
 
+    # Generate the schedule from the +starting_order+
+    # and +start_date+. +starting_order+ is a list of
+    # usernames. Generation creates user to date mappings
+    # or overwrites existing ones.
     def self.generate(starting_order, start_date)
         cur_date = start_date.next_schedule_day
         schedule_till = nil
@@ -17,17 +23,22 @@ class Schedule < ActiveRecord::Base
         return schedule_till
     end
 
+    # Remove any previous schedule mappings that come
+    # after the +schedule_till+ date as they are invalid now
     def self.strip(schedule_till)
         where("date > ?", schedule_till).destroy_all
     end
 
+    # Generate the schedule from +from+ date to +to+
+    # date by internally using the +generate+ method
+    # Also sets the +schedule_till+ date
     def self.extend(from: nil, to: nil)
         if OrderEntry.starting_order.nil?
             return
         end
 
         if from.nil?
-            from = ScheduledTillDate.schedule_till.next
+            from = (ScheduledTillDate.schedule_till || Date.today).next
         end
  
         loop do
@@ -44,6 +55,8 @@ class Schedule < ActiveRecord::Base
         end
     end
 
+    # If the +user+ is given, list any schedule assignments for the user in the
+    # next 30 days else list the schedule of all users for the current month.
     def self.list(user=nil)
         if ScheduledTillDate.extend?(Date.today.end_of_month)
             Schedule.extend(to: Date.today.end_of_month)
@@ -58,11 +71,11 @@ class Schedule < ActiveRecord::Base
         return schedule_days.order(date: :asc)
     end
 
-    #Handle user making their day as not doable. Currently swaps with
-    #another random user. Swapping with the next schedule date might be a better
-    #approach. TODO and open for discussion. Also, the marked days are not
-    #stored so it also possible that if enough swappings happen, someone might
-    #get swapped into a day they intially marked a not doable (TODO).
+    # Handle user making their on-duty day as not doable. Currently swaps with
+    # another random user. Swapping with the next schedule date might be a better
+    # approach. TODO and open for discussion. Also, the marked days are not
+    # stored so it also possible that if enough swappings happen, someone might
+    # get swapped into a day they intially marked a not doable (TODO).
     def self.off_day(username, date)
         user = User.where(name: username).first
         if ScheduledTillDate.extend?(date.end_of_month)
@@ -90,7 +103,7 @@ class Schedule < ActiveRecord::Base
         return nil
     end
 
-    #Find who is today's on-duty user
+    # Find who is today's on-duty user
     def self.support_hero
         if ScheduledTillDate.extend?(Date.today)
             Schedule.extend(from: Date.today)
@@ -99,10 +112,9 @@ class Schedule < ActiveRecord::Base
         return Schedule.where(date: Date.today).first 
     end
 
-    #Swap schedules
-    #Params:
-    # Swapper - Person initiating the swap
-    # Swappee - Person with whom the schedule is being swapped
+    # Swap schedules
+    #   Swapper - Person initiating the swap
+    #   Swappee - Person with whom the schedule is being swapped
     def self.swap(swapper, swapper_date, swappee, swappee_date)
 
         if ScheduledTillDate.extend?([swapper_date, swappee_date].max)

@@ -4,9 +4,6 @@ class SchedulesController < ApplicationController
         username = params[:username]
         user = User.where(name: username)
         schedules = Schedule.list(user).map { |schedule| {date: schedule.date, user: schedule.user} }
-        #respond_to do |format|
-        #    format.json { render :json => schedules }
-        #end
         respond_with schedules
     end
 
