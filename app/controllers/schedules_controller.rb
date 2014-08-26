@@ -2,7 +2,7 @@ class SchedulesController < ApplicationController
     respond_to :json
     def index
         username = params[:username]
-        user = User.where(name: username)
+        user = User.find_by(name: username)
         schedules = Schedule.list(user).map { |schedule| {date: schedule.date, user: schedule.user} }
         respond_with schedules
     end
@@ -41,8 +41,8 @@ class SchedulesController < ApplicationController
         swappee = params[:swappee]
         swapper_date = Date.parse(params[:swapper_date])
         swappee_date = Date.parse(params[:swappee_date])
-        swapper = User.where(name: swapper).first
-        swappee = User.where(name: swappee).first
+        swapper = User.find_by(name: swapper)
+        swappee = User.find_by(name: swappee)
         message = Schedule.swap(swapper, swapper_date, swappee, swappee_date)
         respond_to do |format|
             format.json {render :json => {message: message}}
