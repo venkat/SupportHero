@@ -39,6 +39,9 @@ gem 'holidays'
 #JSON
 gem 'json'
 
+#Timecop
+gem 'timecop'
+
 #REST API client
 #gem 'rest-client'
 
