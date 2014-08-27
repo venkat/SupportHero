@@ -23,6 +23,9 @@ class ScheduleTest < ActiveSupport::TestCase
         Timecop.freeze(2014, 8, 21, 12, 0, 0)
         support_hero = Schedule.support_hero
         assert support_hero.user.name == 'B' and support_hero.date == test_date
+        Timecop.freeze(2014, 8 , 9, 12, 0, 0)
+        support_hero = Schedule.support_hero
+        assert support_hero.nil?
         Timecop.return
     end
 
